@@ -1,5 +1,7 @@
 # ICAI 2026 — Domain-Adapted SLMs for Course-Aware Automated Feedback
 
+**Live deck:** https://chusitooxduwu.github.io/icai2026-slides/
+
 Slides for the ICAI 2026 talk on *Domain-Adapted Small Language Models for
 Course-Aware Automated Feedback in Introductory Programming*
 (Rosales, Chu, Manrique, Sánchez — Universidad de los Andes).
@@ -58,4 +60,4 @@ If a slide overflows, split it; nothing shrinks automatically.
 ## Publishing on the web
 
 The repo is served with GitHub Pages from the `main` branch root, so the deck is
-live at `https://<user>.github.io/<repo>/`. Every push updates it within a minute.
+live at **https://chusitooxduwu.github.io/icai2026-slides/** (source: https://github.com/ChusitooXDuwu/icai2026-slides). Every push updates it within a minute.
