@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domain-Adapted SLMs for Course-Aware Feedback — ICAI 2026</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&family=DM+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+  <link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+<div class="reveal">
+  <div class="footer">ICAI 2026 · Universidad de los Andes</div>
+  <div class="slides">
+
+    <!-- 1 · Cover -->
+    <section data-transition="fade">
+      <div class="slide centered">
+        <div class="title-box">
+          <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+          <h1>Domain-Adapted Small Language Models<br>for Course-Aware Automated Feedback<br>in Introductory Programming</h1>
+        </div>
+        <div class="authors">
+          <p>Eduardo Rosales</p><p class="dot">·</p>
+          <p class="presenter">Wyo Hann Chu</p><p class="dot">·</p>
+          <p>Rubén Manrique</p><p class="dot">·</p>
+          <p>Mario Sánchez</p>
+        </div>
+        <p class="venue">ICAI 2026 · [City, dates]</p>
+        <p class="affil">Universidad de los Andes · Bogotá, Colombia</p>
+      </div>
+      <aside class="notes">Saludo. Este trabajo nace del curso de Introducción a la Programación (IP) de Uniandes: más de 1.000 estudiantes por semestre y un calificador automático, Senecode, que dice qué falló pero casi nunca por qué. Preguntamos si un modelo pequeño, adaptado con datos del curso, puede dar retroalimentación de calidad comparable a un LLM comercial respetando las restricciones del curso.</aside>
+    </section>
+
+    <!-- 2 · The course -->
+    <section data-transition="fade">
+      <div class="slide">
+        <div class="head"><p class="eyebrow">01 · The course</p><h2>Introduction to Programming (IP)</h2></div>
+        <div class="row">
+          <div class="tile"><p class="num">1,000+</p><p class="label">students per semester, required across several academic schools</p></div>
+          <div class="tile"><p class="num">25</p><p class="label">students per section, many sections taught in parallel</p></div>
+          <div class="tile"><p class="num">4</p><p class="label">levels, each restricting the constructs students may use</p></div>
+        </div>
+        <div class="row gap-16">
+          <div class="card tight"><p class="lvl">Level 1</p><p>Variables, int / float / str, functions, composition</p></div>
+          <div class="card tight"><p class="lvl">Level 2</p><p>Conditionals, bool, Boolean expressions</p></div>
+          <div class="card tight"><p class="lvl">Level 3</p><p>Loops, lists, dictionaries, traversal patterns</p></div>
+          <div class="card tight"><p class="lvl">Level 4</p><p>Matrices; pandas, Matplotlib, NumPy</p></div>
+        </div>
+        <p class="lead">Practice-driven: two lectures and one lab per week, graded Python exercises at every level. <b>At this scale, sustained instructor feedback is hard.</b></p>
+      </div>
+      <aside class="notes">IP es obligatorio en varias facultades. Para mantener consistencia entre secciones el curso se apoya en práctica: ejercicios calificados en cada nivel. Cada nivel restringe qué construcciones puede usar el estudiante (por ejemplo, nada de ciclos antes del nivel 3). Esa restricción será clave después: la retroalimentación no puede sugerir cosas que aún no se han visto.</aside>
+    </section>
+
+    <!-- 3 · Senecode -->
+    <section data-transition="fade">
+      <div class="slide">
+        <div class="head"><p class="eyebrow">02 · The grader</p><h2>Senecode: fast and trusted, but terse</h2></div>
+        <div class="row gap-40">
+          <div class="fixed stack" style="width:560px; gap:24px">
+            <div class="bignum"><p class="num">6 years</p><p class="label">in use in the course</p></div>
+            <div class="bignum"><p class="num">700,000+</p><p class="label">submissions graded with unit tests</p></div>
+            <div class="bignum"><p class="num">Unlimited</p><p class="label">resubmissions, no penalty, near-immediate result</p></div>
+          </div>
+          <div class="stack" style="gap:20px">
+            <div class="code">
+              <p class="label">Submitted function</p>
+              <p><span class="kw">def</span> altura_en_mts(pies, pulgadas):</p>
+              <p>&nbsp;&nbsp;&nbsp;&nbsp;total = pulgadas + pies * 12</p>
+              <p>&nbsp;&nbsp;&nbsp;&nbsp;metros = total * 2.54 / 100</p>
+              <p>&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> metros</p>
+            </div>
+            <div class="code report">
+              <p class="label">What Senecode reports</p>
+              <p><b class="orange">FAILED</b>&nbsp;&nbsp;altura_en_mts(6, 0)</p>
+              <p>expected: 1.83&nbsp;&nbsp;&nbsp;&nbsp;got: 1.8288</p>
+            </div>
+          </div>
+        </div>
+        <p class="lead">It tells students <b>what</b> failed, barely <b>why</b>. Students have asked for more specific guidance on the causes of failures, and any new mechanism must keep Senecode's reliability.</p>
+      </div>
+      <aside class="notes">Senecode califica cada función con pruebas unitarias y compara salidas. Si pasa todo: nota máxima. Si falla, muestra el resultado esperado y ya. Ejemplo real del conjunto: el estudiante no redondea a dos decimales; Senecode dice "esperaba 1.83, obtuve 1.8288". Es correcto pero no explica la causa. La confianza de estudiantes y profesores en Senecode (6 años, 700 mil envíos) es un activo que no podemos poner en riesgo con retroalimentación equivocada.</aside>
+    </section>
+
+    <!-- 4 · The gap -->
+    <section data-transition="fade">
+      <div class="slide gap-32">
+        <div class="head"><p class="eyebrow">03 · The gap</p><h2>Students need the why. At what cost?</h2></div>
+        <div class="row">
+          <div class="card">
+            <h3>Commercial LLMs</h3>
+            <p class="sub">GPT-4o Mini · Claude 4.5 Haiku</p>
+            <ul>
+              <li><b class="green">+</b> Detailed natural-language explanations</li>
+              <li><b class="orange">−</b> Recurring cost: 1,000+ students × unlimited attempts</li>
+              <li><b class="orange">−</b> Not built for course rules: may suggest constructs not yet taught, or the full solution</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Off-the-shelf SLMs</h3>
+            <p class="sub">1–1.5B parameters, local</p>
+            <ul>
+              <li><b class="green">+</b> Cheap; runs on a 16 GB GPU already on campus</li>
+              <li><b class="orange">−</b> Prone to inaccurate or hallucinated explanations</li>
+              <li><b class="orange">−</b> Novices cannot tell good feedback from bad</li>
+            </ul>
+          </div>
+        </div>
+        <div class="pills">
+          <p class="eyebrow">Five design constraints</p>
+          <p class="pill">Non-disclosive</p><p class="pill">Course-level</p><p class="pill">Reliable</p><p class="pill">Cost-efficient</p><p class="pill">Low compute</p>
+        </div>
+        <p class="rq">Can a cost-efficient, adapted SLM approach commercial-LLM quality while satisfying introductory-programming constraints?</p>
+      </div>
+      <aside class="notes">Los LLM comerciales explican bien, pero cada intento cuesta y no conocen las reglas del curso: pueden sugerir un ciclo en nivel 1 o entregar la solución. Los SLM son baratos y locales pero alucinan, y un novato no puede detectarlo. De ahí las cinco restricciones de diseño: no revelar la solución, respetar el nivel, ser confiable, costo sostenible y poco cómputo. Pregunta de investigación en azul.</aside>
+    </section>
+
+    <!-- 5 · Closest related work -->
+    <section data-transition="fade">
+      <div class="slide gap-32">
+        <div class="head"><p class="eyebrow">04 · Closest related work</p><h2>Koutcheme, Woodrow &amp; Piech (2026)</h2></div>
+        <p class="lead">Same question, from Stanford's Code in Place and Aalto: can an adapted, code-specialised SLM approach commercial LLMs for scalable programming feedback? Different evidence and different training signal.</p>
+        <table>
+          <tr class="band"><th style="width:20%"></th><th style="width:40%">Koutcheme et al. (SIGCSE TS 2026)</th><th style="width:40%" class="blue">This work</th></tr>
+          <tr><td class="b">Setting</td><td>Code in Place, massive global online course; 3B SLM, SFT + RL, rubric-based prompting</td><td>IP at Uniandes, 1,000+ students; 1.5B SLM, QLoRA</td></tr>
+          <tr><td class="b">Model input</td><td>Static submission information</td><td>Extended unit tests: each failed test linked to the requirement it checks</td></tr>
+          <tr><td class="b">Adaptation signal</td><td>Feedback generated by a teacher LLM (knowledge distillation)</td><td>Feedback written and peer-checked by the instructional team</td></tr>
+          <tr><td class="b">Evaluation</td><td>Accuracy and selectivity; 53 TAs + LLM-as-a-judge</td><td>Seven criteria, 1,000 single-blind human ratings</td></tr>
+        </table>
+        <p class="small">Also: 61A Bot and CS50's tutor (GPT-4, human-in-the-loop); Woodrow et al. 2025 (teacher-in-the-loop DPO, LLaMA 3.1-8B preferred over GPT-4o); Kotalwar et al. 2024 (small models under cost, latency and privacy constraints).</p>
+      </div>
+      <aside class="notes">El trabajo más cercano es Koutcheme, Woodrow y Piech (SIGCSE TS 2026, grupo de Chris Piech en Stanford + Aalto): también adaptan un SLM especializado en código y lo comparan con LLM comerciales, en Code in Place. Dos diferencias: ellos usan información estática del envío, nosotros pruebas unitarias extendidas que vinculan cada fallo con el requisito que evalúa; ellos destilan retroalimentación de un LLM profesor, nosotros entrenamos con retroalimentación escrita por humanos. Mencionar rápido el resto: LLM comerciales con humano en el ciclo (61A Bot, CS50), y modelos abiertos adaptados con DPO o bajo restricciones de despliegue.</aside>
+    </section>
+
+    <!-- 6 · Approach -->
+    <section data-transition="fade">
+      <div class="slide">
+        <div class="head"><p class="eyebrow">05 · Approach</p><h2>An adapted SLM, minimal diagnostic context</h2></div>
+        <div class="pipeline">
+          <div class="inputs">
+            <div class="card"><h3>Exercise statement</h3><p>with the level's construct restrictions</p></div>
+            <div class="card"><h3>Reference solution</h3><p>to spot deviations, never to be shown</p></div>
+            <div class="card"><h3>Submitted code</h3><p>a failing attempt</p></div>
+            <div class="card hi"><h3>Extended unit tests</h3><p>inputs, expected vs actual, and the purpose of each test</p></div>
+          </div>
+          <div class="arrow"></div>
+          <div class="model"><h3>Qwen2.5-Coder-1.5B</h3><p>QLoRA adapter trained on human-written feedback · 4-bit · fits a 16 GB GPU</p></div>
+          <div class="arrow"></div>
+          <div class="output">
+            <p class="label">Feedback to the student</p>
+            <ul>
+              <li>1–2 bullets, addressed to the student</li>
+              <li>Never the solution, never code</li>
+              <li>Only constructs of the current level</li>
+              <li>In Spanish, the course language</li>
+            </ul>
+          </div>
+        </div>
+        <p class="note">Only what is needed to diagnose the failure: long, irrelevant context degrades small models (Liu et al., 2024).</p>
+      </div>
+      <aside class="notes">El prompt tiene cuatro elementos: enunciado con restricciones del nivel, solución de referencia, código enviado y las pruebas unitarias extendidas. Todo pasa por Qwen2.5-Coder-1.5B con un adaptador QLoRA. La salida es una retroalimentación de uno o dos puntos, dirigida al estudiante, sin código ni solución, dentro de lo visto en el curso. Deliberadamente damos poco contexto: un modelo pequeño se distrae con información irrelevante.</aside>
+    </section>
+
+    <!-- 7 · Extended unit tests -->
+    <section data-transition="fade">
+      <div class="slide">
+        <div class="head"><p class="eyebrow">06 · Extended unit tests</p><h2>A failed test now names its requirement</h2></div>
+        <div class="row gap-32">
+          <div class="stack" style="gap:16px">
+            <div class="code">
+              <p class="label">Plain test (Senecode today)</p>
+              <p>&gt;&gt;&gt; resultado = altura_en_mts(6, 0)</p>
+              <p>&gt;&gt;&gt; round(resultado, 2) == resultado</p>
+              <p>True&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm"># expected</span></p>
+              <p><b class="orange">False</b>&nbsp;&nbsp;&nbsp;<span class="cm"># got</span></p>
+              <p>&nbsp;</p><p>&nbsp;</p>
+            </div>
+            <p class="note">The model sees a mismatch and must <b>guess</b> which requirement it violates.</p>
+          </div>
+          <div class="stack" style="gap:16px">
+            <div class="code hi">
+              <p class="label">Extended test (this work)</p>
+              <p>&gt;&gt;&gt; resultado = altura_en_mts(6, 0)</p>
+              <p>&gt;&gt;&gt; round(resultado, 2) == resultado</p>
+              <p>True&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm"># expected</span></p>
+              <p><b class="orange">False</b>&nbsp;&nbsp;&nbsp;<span class="cm"># got</span></p>
+              <p><b class="blue">Test 2 · verifies rounding to 2 decimals</b></p>
+              <p><b class="blue">builds on Test 1 (return type is float)</b></p>
+            </div>
+            <p class="note">The rounding requirement is unmet: enough evidence for a <b>targeted, non-revealing</b> hint.</p>
+          </div>
+        </div>
+        <p class="lead">Descriptions are hand-written per test under the non-disclosive, course-level and reliability constraints: <b>evidence about the failure, not the answer.</b></p>
+      </div>
+      <aside class="notes">Nuestra primera contribución técnica. A cada prueba unitaria le agregamos una descripción en lenguaje natural de su propósito y de qué pruebas depende. Con la prueba plana, el modelo ve "True vs False" y tiene que adivinar; con la extendida sabe que lo que falla es el redondeo a dos decimales. Las descripciones las escribe el equipo docente cuidando no revelar la solución ni usar conceptos fuera del nivel.</aside>
+    </section>
+
+    <!-- 8 · Adapting the model -->
+    <section data-transition="fade">
+      <div class="slide gap-32">
+        <div class="head"><p class="eyebrow">07 · Adapting the model</p><h2>Qwen2.5-Coder-1.5B, adapted with QLoRA</h2></div>
+        <p style="font-size:28px">Why this base: code-specialised, supports program reasoning, fits the 16 GB GPU already on campus, and the newest Qwen coder at this size (Qwen3-Coder starts at 30B).</p>
+        <div class="row">
+          <div class="card">
+            <h3>Training data</h3>
+            <ul>
+              <li><b>270</b> synthetic failing submissions over <b>50</b> course exercises</li>
+              <li>Each with reference solution, extended unit tests and feedback written and peer-checked by a 5-person instructional team</li>
+              <li>Real student code not reused (secondary-use limits); only its recurring error patterns, mined from frequently failed tests</li>
+              <li>70 / 30 train / validation split</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>QLoRA configuration</h3>
+            <ul class="mono">
+              <li>4-bit base, 16-bit LoRA adapters</li>
+              <li>r = 16, α = 32, dropout 0.05</li>
+              <li>lr 2e-4, batch 2 × grad. accum. 8</li>
+              <li>max length 2048, 3 epochs, 4 warmup steps</li>
+              <li>loss only on the feedback tokens</li>
+            </ul>
+          </div>
+        </div>
+        <p class="lead"><b>Goal:</b> align format and behaviour with the course constraints, not teach the model new programming knowledge.</p>
+      </div>
+      <aside class="notes">Elegimos un modelo que ya sabe de código y lo adaptamos, en vez de entrenar desde cero. Datos: 270 envíos sintéticos incorrectos sobre 50 ejercicios del curso; no pudimos reusar código real de estudiantes, así que reprodujimos los patrones de error más frecuentes. Cada ejemplo lleva retroalimentación escrita por el equipo docente y revisada por pares. QLoRA: base en 4 bits, adaptadores LoRA, configuración estándar. Importante: los cinco que escribieron esta retroalimentación no participaron después como evaluadores.</aside>
+    </section>
+
+    <!-- 9 · Experiments -->
+    <section data-transition="fade">
+      <div class="slide gap-28">
+        <div class="head"><p class="eyebrow">08 · Experiments</p><h2>1,000 human ratings, single-blind</h2></div>
+        <div class="row">
+          <div class="card mid"><p class="sub">Commercial LLMs</p><p>GPT-4o Mini<br>Claude 4.5 Haiku</p></div>
+          <div class="card mid hi"><p class="sub blue">Adapted (ours)</p><p>Qwen2.5-Coder-1.5B<br>+ QLoRA adapter</p></div>
+          <div class="card mid"><p class="sub">Off-the-shelf SLMs</p><p>Qwen2.5-Coder-1.5B · LLaMA 3.2-1B<br>DeepSeek-R1-1.5B</p></div>
+        </div>
+        <div class="row">
+          <div class="tile compact"><p class="num">10 reviewers</p><p class="label">from the IP instructional team; none wrote the training feedback</p></div>
+          <div class="tile compact"><p class="num">100 samples each</p><p class="label">≈167 per model; every reviewer rated all six models, one rating per sample</p></div>
+          <div class="tile compact"><p class="num">Blind</p><p class="label">plain-text feedback only, model unknown; same inputs and prompts for all models</p></div>
+        </div>
+        <div class="pills tight">
+          <p class="eyebrow">Criteria, 1–10</p>
+          <p class="pill">Supportive</p><p class="pill">Selective</p><p class="pill">Accurate</p><p class="pill">Non-revealing</p><p class="pill">Concise</p><p class="pill">Novice-appropriate</p>
+          <p class="pill orange">Hallucination-free (yes / no)</p>
+        </div>
+        <p class="small">Local models ran on an RTX 4070 Ti SUPER (16 GB VRAM) with 32 GB DDR5 RAM.</p>
+      </div>
+      <aside class="notes">Seis modelos, mismos prompts y entradas. Evaluación humana a ciegas: diez revisores del equipo docente, cien muestras cada uno, mil en total, distribuidas de forma estratificada para que cada revisor viera los seis modelos. Siete criterios tomados de la literatura de retroalimentación formativa (Hattie y Timperley, Shute, Koutcheme, Scarlatos): seis en escala 1–10 y "libre de alucinaciones" como sí/no.</aside>
+    </section>
+
+    <!-- 10 · Results chart -->
+    <section data-transition="fade">
+      <div class="slide gap-24">
+        <div class="head"><p class="eyebrow">09 · Results</p><h2>Adapted Qwen sits with the commercial LLMs</h2></div>
+        <div class="figure"><img src="img/fig1-results.png" alt="Grouped bar chart of average human scores (1–10) per criterion for six models. GPT-4o Mini, Claude Haiku and Adapted Qwen score between 8.3 and 9.8 on every criterion; LLaMA 3.2, Qwen 2.5 and DeepSeek R1 fall to 2.9–5.3 on Selective, Accurate and Non-revealing."></div>
+      </div>
+      <aside class="notes">Promedio por criterio (1–10) con IC del 95%. Dos grupos claros: los LLM comerciales y nuestro Qwen adaptado arriba de 8.3 en todos los criterios; los SLM sin adaptar caen a 3–5 en Selectivo, Preciso y No revelador. Qwen 2.5 base (rojo) es el peor en esos tres: la adaptación lo lleva de la barra roja a la verde clara. Los evaluadores también reportaron respuestas en inglés (LLaMA) y en chino (DeepSeek) pese a que todo el input estaba en español.</aside>
+    </section>
+
+    <!-- 11 · Results in numbers -->
+    <section data-transition="fade">
+      <div class="slide gap-28">
+        <div class="head"><p class="eyebrow">10 · Results in numbers</p><h2>Adaptation closed most of the gap</h2></div>
+        <div class="grid2">
+          <div class="stat"><p class="num">5.34 → 9.01</p><p class="label">Overall score, Qwen 2.5 before → after adaptation</p><p class="detail">+3.67 points on the 10-point scale, p &lt; 0.001, d = 4.30</p></div>
+          <div class="stat"><p class="num">9.01 ≈ 9.05</p><p class="label">Adapted Qwen vs Claude Haiku: statistically tied</p><p class="detail">difference −0.04, 95% CI [−0.18, +0.09], p = 0.534, d = 0.07</p></div>
+          <div class="stat orange"><p class="num">9.58</p><p class="label">GPT-4o Mini still leads</p><p class="detail">+0.57 over the adapted SLM, p &lt; 0.001, d = 1.51; also higher on Non-revealing</p></div>
+          <div class="stat"><p class="num">21.6% → 91.0%</p><p class="label">Hallucination-free responses, before → after</p><p class="detail">Claude Haiku 77.0% (p &lt; 0.001 vs ours) · GPT-4o Mini 97.6%</p></div>
+        </div>
+        <p style="font-size:28px">On the 16 GB campus GPU (285 W, ≈80 tokens/s) one feedback costs <b>under 0.01 US cents</b> in energy: unlimited attempts stay affordable.</p>
+      </div>
+      <aside class="notes">Cuatro números. La adaptación sube el promedio de 5.34 a 9.01 (d = 4.3). Contra Claude Haiku no hay diferencia significativa (p = 0.53). GPT-4o Mini sigue adelante, 0.57 puntos, y es mejor en no revelar la solución: hay que decirlo. Lo más llamativo: libre de alucinaciones pasa de 21.6% a 91.0%, por encima de Haiku (77%). Ejemplo de alucinación del Qwen base en el ejercicio de la altura: "¿Por qué estás sumando 1 adicional?", y en el código no se suma 1 en ninguna parte. Costo: menos de una centésima de centavo por retroalimentación.</aside>
+    </section>
+
+    <!-- 12 · Conclusions -->
+    <section data-transition="fade">
+      <div class="slide">
+        <div class="head"><p class="eyebrow">11 · Conclusions</p><h2>Contributions</h2></div>
+        <div class="numbered">
+          <div class="item"><p class="n">1</p><div class="body"><h3>Domain adaptation works for this task</h3><p>Qwen2.5-Coder-1.5B went from 5.34 to 9.01 / 10, statistically tied with Claude Haiku (9.05); GPT-4o Mini remains ahead at 9.58.</p></div></div>
+          <div class="item"><p class="n">2</p><div class="body"><h3>Reliability improved the most</h3><p>Hallucination-free feedback rose from 21.6% to 91.0%, above Claude Haiku's 77.0%. Consistent with adaptation aligning format and constraints, not adding programming knowledge.</p></div></div>
+          <div class="item"><p class="n">3</p><div class="body"><h3>Extended unit tests + human-written feedback</h3><p>Linking each failed test to the requirement it checks gives a 1.5B model enough evidence for course-aware, non-disclosive feedback at negligible cost.</p></div></div>
+        </div>
+        <p class="thanks">Thank you · questions? · ee.rosales24@uniandes.edu.co · w.chu@uniandes.edu.co</p>
+      </div>
+      <aside class="notes">Tres mensajes. Uno: un SLM adaptado con datos del curso se acerca a los LLM comerciales (empate con Haiku, GPT-4o Mini sigue mejor). Dos: la ganancia grande es en confiabilidad, 21.6% a 91% libre de alucinaciones; interpretamos que la adaptación alinea formato y restricciones más que enseñar programación. Tres: las pruebas unitarias extendidas y la retroalimentación humana son lo que hace posible que un modelo de 1.5B dé retroalimentación útil y barata. Si preguntan por limitaciones o trabajo futuro, están las diapositivas ocultas.</aside>
+    </section>
+
+    <!-- ===================== HIDDEN BACKUP SLIDES =====================
+         data-visibility="hidden" keeps them out of the talk and the slide count.
+         To show one, remove the attribute (or change it to "uncounted"). -->
+
+    <section data-transition="fade" data-visibility="hidden">
+      <div class="slide">
+        <div class="head"><p class="eyebrow">Backup · Limitations</p><h2>Limitations</h2></div>
+        <div class="grid2">
+          <div class="card mid"><h3>Scope</h3><p class="note">One SLM, one course, a limited exercise set. Held-out submissions come from exercises seen during adaptation, so overfitting to the pool is not excluded.</p></div>
+          <div class="card mid"><h3>Synthetic submissions</h3><p class="note">Built from recurring error patterns in Senecode's history, all incorrect by design; they do not reproduce the full distribution of authentic student code.</p></div>
+          <div class="card mid"><h3>Evaluators</h3><p class="note">Insiders highly familiar with the course; one reviewer per sample, so inter-rater reliability was not measured.</p></div>
+          <div class="card mid"><h3>Baselines and inputs</h3><p class="note">No comparison with knowledge distillation or self-supervised repair strategies; prompts use test execution only, no static program analysis.</p></div>
+        </div>
+      </div>
+      <aside class="notes">Diapositiva oculta, para preguntas. Cuatro limitaciones: alcance, envíos sintéticos, evaluadores internos sin medida de acuerdo entre revisores, y ausencia de comparación con destilación o análisis estático.</aside>
+    </section>
+
+    <section data-transition="fade" data-visibility="hidden">
+      <div class="slide">
+        <div class="head"><p class="eyebrow">Backup · Future work</p><h2>Future work</h2></div>
+        <div class="numbered" style="gap:22px">
+          <div class="item" style="gap:24px"><p class="n sm">→</p><p class="plain">Generalisation: unseen exercises, other course levels, other programming languages and topics</p></div>
+          <div class="item" style="gap:24px"><p class="n sm">→</p><p class="plain">Authorised, de-identified authentic student submissions paired with human-written feedback</p></div>
+          <div class="item" style="gap:24px"><p class="n sm">→</p><p class="plain">Multiple and external reviewers, inter-rater agreement, and LLM-as-a-judge alongside humans</p></div>
+          <div class="item" style="gap:24px"><p class="n sm">→</p><p class="plain">Compare adaptation strategies: knowledge distillation from teacher LLMs, preference optimisation, self-supervised program-repair pretext tasks</p></div>
+          <div class="item" style="gap:24px"><p class="n sm">→</p><p class="plain">Add static-analysis evidence to the prompt; broaden criteria and the set of models evaluated</p></div>
+        </div>
+      </div>
+      <aside class="notes">Diapositiva oculta. Trabajo futuro derivado de las limitaciones.</aside>
+    </section>
+
+    <section data-transition="fade" data-visibility="hidden">
+      <div class="slide gap-32">
+        <div class="head"><p class="eyebrow">Backup · Full results</p><h2>Human evaluation, mean ± SD</h2></div>
+        <table class="dense">
+          <tr class="band"><th style="width:22%">Criterion</th><th class="c" style="width:13%">GPT-4o Mini</th><th class="c" style="width:13%">Claude Haiku</th><th class="c blue" style="width:13%">Adapted Qwen</th><th class="c" style="width:13%">LLaMA 3.2</th><th class="c" style="width:13%">Qwen 2.5</th><th class="c" style="width:13%">DeepSeek R1</th></tr>
+          <tr><td>Supportive</td><td class="c">9.57 ± 0.61</td><td class="c">9.37 ± 0.77</td><td class="c blue">9.20 ± 0.79</td><td class="c">7.96 ± 1.68</td><td class="c">8.13 ± 1.62</td><td class="c">5.16 ± 2.36</td></tr>
+          <tr><td>Selective</td><td class="c">9.49 ± 0.80</td><td class="c">9.10 ± 1.17</td><td class="c blue">8.90 ± 0.92</td><td class="c">4.80 ± 2.43</td><td class="c">3.20 ± 1.86</td><td class="c">5.21 ± 2.60</td></tr>
+          <tr><td>Accurate</td><td class="c">9.55 ± 0.71</td><td class="c">8.95 ± 1.30</td><td class="c blue">9.00 ± 0.91</td><td class="c">4.77 ± 2.42</td><td class="c">2.91 ± 1.79</td><td class="c">5.28 ± 2.62</td></tr>
+          <tr><td>Non-revealing</td><td class="c">9.43 ± 0.79</td><td class="c">9.19 ± 1.20</td><td class="c blue">9.00 ± 0.94</td><td class="c">4.35 ± 2.28</td><td class="c">3.47 ± 1.98</td><td class="c">4.73 ± 2.60</td></tr>
+          <tr><td>Concise</td><td class="c">9.63 ± 0.72</td><td class="c">8.33 ± 1.76</td><td class="c blue">8.70 ± 0.99</td><td class="c">6.84 ± 2.37</td><td class="c">6.20 ± 2.47</td><td class="c">5.07 ± 2.75</td></tr>
+          <tr><td>Novice-appropriate</td><td class="c">9.82 ± 0.48</td><td class="c">9.34 ± 0.95</td><td class="c blue">9.30 ± 0.69</td><td class="c">8.07 ± 1.90</td><td class="c">8.19 ± 1.65</td><td class="c">5.20 ± 2.49</td></tr>
+          <tr class="band"><td class="b">Overall</td><td class="c b">9.58 ± 0.42</td><td class="c b">9.05 ± 0.81</td><td class="c b blue">9.01 ± 0.33</td><td class="c b">6.12 ± 1.50</td><td class="c b">5.34 ± 1.16</td><td class="c b">5.10 ± 1.79</td></tr>
+          <tr><td>Hallucination-free</td><td class="c">97.6% (162/166)</td><td class="c">77.0% (127/165)</td><td class="c blue">91.0% (151/166)</td><td class="c">52.1% (87/167)</td><td class="c">21.6% (36/167)</td><td class="c">44.9% (75/167)</td></tr>
+        </table>
+        <p class="small">Scores 1–10; hallucination-free is the share of valid evaluations with no hallucinated content (95% CI for Adapted Qwen: [85.6, 94.5]).</p>
+      </div>
+      <aside class="notes">Diapositiva oculta con la tabla completa del artículo.</aside>
+    </section>
+
+    <section data-transition="fade" data-visibility="hidden">
+      <div class="slide gap-32">
+        <div class="head"><p class="eyebrow">Backup · Evaluation criteria</p><h2>Seven criteria for feedback</h2></div>
+        <div class="grid2" style="gap:18px">
+          <div class="card tight"><h3 class="sm">Supportive</h3><p class="small">Encourages the learner; constructive, non-discouraging tone (Shute; Brookhart)</p></div>
+          <div class="card tight"><h3 class="sm">Selective</h3><p class="small">Focuses only on relevant issues; no unnecessary or nonexistent fixes (Koutcheme et al.)</p></div>
+          <div class="card tight"><h3 class="sm">Accurate</h3><p class="small">Correctly identifies the student's actual mistakes (Koutcheme et al.)</p></div>
+          <div class="card tight"><h3 class="sm">Non-revealing</h3><p class="small">Actionable guidance without disclosing the solution (Scarlatos et al.; Shute)</p></div>
+          <div class="card tight"><h3 class="sm">Concise</h3><p class="small">Only the necessary information, no superfluous detail (Shute; Narciss)</p></div>
+          <div class="card tight"><h3 class="sm">Novice-appropriate</h3><p class="small">Language accessible to novice programmers (Denny et al.)</p></div>
+          <div class="card tight warn"><h3 class="sm orange">Hallucination-free (yes / no)</h3><p class="small">No fabricated, unsupported or wrong claims about the code or its behaviour (Maynez et al.)</p></div>
+        </div>
+      </div>
+      <aside class="notes">Diapositiva oculta con la definición de los siete criterios.</aside>
+    </section>
+
+    <section data-transition="fade" data-visibility="hidden">
+      <div class="slide gap-32">
+        <div class="head"><p class="eyebrow">Backup · Design constraints</p><h2>Five design constraints</h2></div>
+        <div class="defs">
+          <div class="def"><p class="term">Non-disclosive</p><p>Help students find and fix errors without giving the solution or code; general LLMs may hand over explicit hints or full implementations.</p></div>
+          <div class="def"><p class="term">Course-level</p><p>Only constructs the student is expected to know at that level; no advanced features or explanations beyond the prerequisites.</p></div>
+          <div class="def"><p class="term">Reliability</p><p>Correct and clear; hallucinated explanations mislead novices, and long irrelevant context makes them more likely.</p></div>
+          <div class="def"><p class="term">Cost</p><p>Many students, unlimited resubmissions: paying a commercial LLM per failed attempt is hard to sustain.</p></div>
+          <div class="def"><p class="term">Computational resources</p><p>Many parallel submissions on shared academic infrastructure: a small model that fits a 16 GB GPU is preferable to a large local LLM.</p></div>
+        </div>
+      </div>
+      <aside class="notes">Diapositiva oculta con las cinco restricciones de diseño explicadas.</aside>
+    </section>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script>
+  Reveal.initialize({
+    width: 1920, height: 1080, margin: 0, minScale: 0.1, maxScale: 2,
+    center: false, hash: true, transition: 'fade', transitionSpeed: 'fast',
+    slideNumber: 'c/t', showSlideNumber: 'all',
+    controls: false, progress: true,
+    pdfSeparateFragments: false,
+    plugins: [ RevealNotes ]
+  });
+</script>
+</body>
+</html>
