@@ -27,8 +27,7 @@
           <p>Rubén Manrique</p><p class="dot">·</p>
           <p>Mario Sánchez</p>
         </div>
-        <p class="venue">ICAI 2026 · [City, dates]</p>
-        <p class="affil">Universidad de los Andes · Bogotá, Colombia</p>
+        <p class="venue">ICAI 2026 · Orlando, October 16</p>
       </div>
       <aside class="notes">Saludo. Este trabajo nace del curso de Introducción a la Programación (IP) de Uniandes: más de 1.000 estudiantes por semestre y un calificador automático, Senecode, que dice qué falló pero casi nunca por qué. Preguntamos si un modelo pequeño, adaptado con datos del curso, puede dar retroalimentación de calidad comparable a un LLM comercial respetando las restricciones del curso.</aside>
     </section>
@@ -48,7 +47,7 @@
           <div class="card tight"><p class="lvl">Level 3</p><p>Loops, lists, dictionaries, traversal patterns</p></div>
           <div class="card tight"><p class="lvl">Level 4</p><p>Matrices; pandas, Matplotlib, NumPy</p></div>
         </div>
-        <p class="lead">Practice-driven: two lectures and one lab per week, graded Python exercises at every level. <b>At this scale, sustained instructor feedback is hard.</b></p>
+        <p class="lead">Practice driven: two lectures and one lab per week, graded Python exercises at every level. <b>At this scale, sustained instructor feedback is hard.</b></p>
       </div>
       <aside class="notes">IP es obligatorio en varias facultades. Para mantener consistencia entre secciones el curso se apoya en práctica: ejercicios calificados en cada nivel. Cada nivel restringe qué construcciones puede usar el estudiante (por ejemplo, nada de ciclos antes del nivel 3). Esa restricción será clave después: la retroalimentación no puede sugerir cosas que aún no se han visto.</aside>
     </section>
@@ -61,19 +60,19 @@
           <div class="fixed stack" style="width:560px; gap:24px">
             <div class="bignum"><p class="num">6 years</p><p class="label">in use in the course</p></div>
             <div class="bignum"><p class="num">700,000+</p><p class="label">submissions graded with unit tests</p></div>
-            <div class="bignum"><p class="num">Unlimited</p><p class="label">resubmissions, no penalty, near-immediate result</p></div>
+            <div class="bignum"><p class="num">Unlimited</p><p class="label">resubmissions, no penalty, near immediate result</p></div>
           </div>
           <div class="stack" style="gap:20px">
             <div class="code">
               <p class="label">Submitted function</p>
-              <p><span class="kw">def</span> altura_en_mts(pies, pulgadas):</p>
-              <p>&nbsp;&nbsp;&nbsp;&nbsp;total = pulgadas + pies * 12</p>
-              <p>&nbsp;&nbsp;&nbsp;&nbsp;metros = total * 2.54 / 100</p>
-              <p>&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> metros</p>
+              <p><span class="kw">def</span> height_in_m(feet, inches):</p>
+              <p>&nbsp;&nbsp;&nbsp;&nbsp;total = inches + feet * 12</p>
+              <p>&nbsp;&nbsp;&nbsp;&nbsp;meters = total * 2.54 / 100</p>
+              <p>&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> meters</p>
             </div>
             <div class="code report">
               <p class="label">What Senecode reports</p>
-              <p><b class="orange">FAILED</b>&nbsp;&nbsp;altura_en_mts(6, 0)</p>
+              <p><b class="orange">FAILED</b>&nbsp;&nbsp;height_in_m(6, 0)</p>
               <p>expected: 1.83&nbsp;&nbsp;&nbsp;&nbsp;got: 1.8288</p>
             </div>
           </div>
@@ -170,8 +169,8 @@
           <div class="stack" style="gap:16px">
             <div class="code">
               <p class="label">Plain test (Senecode today)</p>
-              <p>&gt;&gt;&gt; resultado = altura_en_mts(6, 0)</p>
-              <p>&gt;&gt;&gt; round(resultado, 2) == resultado</p>
+              <p>&gt;&gt;&gt; result = height_in_m(6, 0)</p>
+              <p>&gt;&gt;&gt; round(result, 2) == result</p>
               <p>True&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm"># expected</span></p>
               <p><b class="orange">False</b>&nbsp;&nbsp;&nbsp;<span class="cm"># got</span></p>
               <p>&nbsp;</p><p>&nbsp;</p>
@@ -181,8 +180,8 @@
           <div class="stack" style="gap:16px">
             <div class="code hi">
               <p class="label">Extended test (this work)</p>
-              <p>&gt;&gt;&gt; resultado = altura_en_mts(6, 0)</p>
-              <p>&gt;&gt;&gt; round(resultado, 2) == resultado</p>
+              <p>&gt;&gt;&gt; result = height_in_m(6, 0)</p>
+              <p>&gt;&gt;&gt; round(result, 2) == result</p>
               <p>True&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm"># expected</span></p>
               <p><b class="orange">False</b>&nbsp;&nbsp;&nbsp;<span class="cm"># got</span></p>
               <p><b class="blue">Test 2 · verifies rounding to 2 decimals</b></p>
