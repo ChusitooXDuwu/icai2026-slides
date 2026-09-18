@@ -14,7 +14,7 @@ no dependencies. Open `index.html` in a browser and present.
 | File | What it is |
 |---|---|
 | `index.html` | The deck. One `<section>` per slide, in order. |
-| `css/theme.css` | The look (colours, type, reusable blocks: tiles, cards, code panels, pipeline, stats). |
+| `css/theme.css` | Academic theme: IBM Plex Sans, restrained blue accents, open columns, code panels and evidence tables. |
 | `img/fig1-results.png` | Figure 1 of the paper (human evaluation by model and criterion). |
 | `export-pdf.py` | Prints the deck to PDF with headless Chrome. |
 
@@ -43,12 +43,12 @@ Reusable blocks (all defined in `css/theme.css`):
 - `.row` / `.grid2` — columns; `.tile` (big number + label), `.stat` (result number), `.card` (bordered box, `hi` = blue highlight).
 - `.code` — code panel; one `<p>` per line, indent with `&nbsp;`, `.kw` for keywords, `.cm` for comments.
 - `.pills` + `.pill` — inline tags; `.numbered` — 1-2-3 list; `.pipeline` — inputs → model → output.
-- Text: `.lead` (30px), `.note` (26px grey), `.small` (24px grey), `.rq` (blue statement).
+- Text: `.lead` (32px), `.note` (26px grey), `.small` (24px grey), `.rq` (blue statement).
 
 Hidden backup slides carry `data-visibility="hidden"`: they are skipped when presenting
 and not counted in the page numbers. Delete the attribute to show one.
 
-Vertical budget per slide: 1080 px minus 128 top / 160 bottom = 792 px of content.
+Vertical budget per slide: 1080 px minus 92 top / 140 bottom = 848 px of content.
 If a slide overflows, split it; nothing shrinks automatically.
 
 ## PDF
